@@ -1813,3 +1813,6 @@ button:focus-visible {
     font-size: 18px;
   }
 }
+.zone-marker {
+  display: none !important;
+}
