@@ -217,7 +217,7 @@ export function DesktopWorld() {
 
         <div className="ground-grid" aria-hidden="true" />
         <div className="ground-line" aria-hidden="true" />
-        <Player jumping={jumping} initials={portfolio.initials} />
+        <Player jumping={jumping} />
 
         <div className="controls-hint" aria-label="World controls">
           <button type="button" className="key" onClick={() => move(-1)} aria-label="Move left">←</button>
