@@ -10,6 +10,8 @@ export type BlogPost = {
   title: string;
   slug: string;
   excerpt: string;
+  // Each string represents one article paragraph.
+  content: string[];
   category: string;
   tags: string[];
   publishedAt: string;

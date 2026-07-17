@@ -1,5 +1,4 @@
-// Import Next.js Link for internal navigation.
-import Link from "next/link";
+
 
 // Import the reusable article-card component.
 import { PostCard } from "@/components/blog/post-card";
@@ -61,39 +60,6 @@ export default function BlogPage() {
         }}
       />
 
-      {/* Blog header */}
-      <header className="relative z-10 border-b border-[rgba(56,255,122,0.2)] bg-[rgba(2,7,4,0.88)] backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          {/* Brand link returns the user to the portfolio homepage. */}
-          <Link href="/" className="group">
-            <span className="block text-[10px] font-bold tracking-[0.25em] text-[#38ff7a]">
-              SEC://PORTFOLIO
-            </span>
-
-            <span className="mt-1 block text-sm font-bold tracking-[0.08em] text-[#a8ffc1]">
-              BRAHIM BOUGHEZROUN
-            </span>
-          </Link>
-
-          {/* Main blog navigation */}
-          <nav
-            aria-label="Blog navigation"
-            className="flex items-center gap-6 text-xs font-bold tracking-[0.14em]"
-          >
-            <Link
-              href="/"
-              className="text-[#7ba487] transition hover:text-[#38ff7a]"
-            >
-              PORTFOLIO
-            </Link>
-
-            {/* BLOG is plain text because this is already the current page. */}
-            <span aria-current="page" className="text-[#38ff7a]">
-              BLOG
-            </span>
-          </nav>
-        </div>
-      </header>
 
       {/* Main content container */}
       <div className="relative z-10 mx-auto max-w-7xl px-6">
@@ -221,18 +187,6 @@ export default function BlogPage() {
             ))}
           </div>
         </section>
-
-        {/* Blog footer */}
-        <footer className="flex flex-col gap-4 border-t border-[rgba(56,255,122,0.2)] py-10 text-xs tracking-[0.12em] text-[#7ba487] md:flex-row md:items-center md:justify-between">
-          <p>BRAHIM://WRITING_ARCHIVE</p>
-
-          <Link
-            href="/"
-            className="font-bold text-[#38ff7a] transition hover:text-[#a8ffc1]"
-          >
-            ← RETURN TO PORTFOLIO
-          </Link>
-        </footer>
       </div>
     </main>
   );
