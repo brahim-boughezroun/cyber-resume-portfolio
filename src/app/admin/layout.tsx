@@ -1,14 +1,12 @@
 import Link from "next/link";
 
 import { requireAdmin } from "../../auth/authorization";
-
+import { logoutAction } from "./actions";
 type AdminLayoutProps = {
   children: React.ReactNode;
 };
 
-export default async function AdminLayout({
-  children,
-}: AdminLayoutProps) {
+export default async function AdminLayout({ children }: AdminLayoutProps) {
   const user = await requireAdmin();
 
   return (
@@ -52,6 +50,20 @@ export default async function AdminLayout({
             >
               Public blog
             </Link>
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                className="
+      rounded-md border border-red-500/30
+      bg-red-500/10 px-3 py-2
+      text-sm text-red-200 transition
+      hover:border-red-400/60
+      hover:bg-red-500/20
+    "
+              >
+                Logout
+              </button>
+            </form>
           </nav>
         </div>
       </header>

@@ -1,4 +1,4 @@
-import { database } from "../migrations/client";
+import { database } from "../../src/database/client";
 
 export type UserRole = "ADMIN" | "READER";
 

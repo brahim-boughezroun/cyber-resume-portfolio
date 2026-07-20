@@ -3,9 +3,9 @@ import { verify } from "@node-rs/argon2";
 import {
   findUserByEmail,
   type SafeUser,
-} from "../database/repositories/user.repository";
+} from "../../database/repositories/user.repository";
 
-import { createSession } from "../database/repositories/session.repository";
+import { createSession } from "../../database/repositories/session.repository";
 
 import {
   createSessionExpirationDate,

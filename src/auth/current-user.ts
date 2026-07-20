@@ -3,13 +3,13 @@ import { cookies } from "next/headers";
 import {
   findUserById,
   type SafeUser,
-} from "../database/repositories/user.repository";
+} from "../../database/repositories/user.repository";
 
 import {
   deleteSessionByTokenHash,
   findSessionByTokenHash,
   updateSessionLastUsedAt,
-} from "../database/repositories/session.repository";
+} from "../../database/repositories/session.repository";
 
 import {
   hashSessionToken,

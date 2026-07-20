@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import type { SafeUser } from
-  "../database/repositories/user.repository";
+  "../../database/repositories/user.repository";
 
 import { getCurrentUser } from "./current-user";
 
