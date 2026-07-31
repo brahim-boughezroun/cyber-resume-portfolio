@@ -3,21 +3,23 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-  "dev": "next dev",
-  "build": "next build",
-  "start": "next start",
-  "lint": "eslint .",
-  "seed:admin": "node --env-file=.env.local database/seeds/create-admin.mjs",
-  "seed:blog": "node --env-file=.env.local database/seeds/create-blog-content.mjs",
-  "migrate": "node --env-file=.env.local database/run-migrations.mjs",
-  "migrate:baseline": "node --env-file=.env.local database/run-migrations.mjs --baseline"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "seed:admin": "node --env-file=.env.local database/seeds/create-admin.mjs",
+    "seed:blog": "node --env-file=.env.local database/seeds/create-blog-content.mjs",
+    "migrate": "node --env-file=.env.local database/run-migrations.mjs",
+    "migrate:baseline": "node --env-file=.env.local database/run-migrations.mjs --baseline"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",
     "next": "latest",
     "pg": "^8.22.0",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "latest",

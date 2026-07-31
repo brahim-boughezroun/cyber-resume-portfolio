@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MarkdownContent } from "@/components/blog/markdown-content";
 
 import { AuthorCard } from "@/components/blog/author-card";
 import { PostCard } from "@/components/blog/post-card";
@@ -42,9 +43,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function BlogPostPage({
-  params,
-}: BlogPostPageProps) {
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
 
   /**
@@ -82,9 +81,7 @@ export default async function BlogPostPage({
    * It lets us quickly check whether another
    * article shares a tag with the current article.
    */
-  const currentTagIds = new Set(
-    post.tags.map((tag) => tag.id),
-  );
+  const currentTagIds = new Set(post.tags.map((tag) => tag.id));
 
   const relatedPosts = publishedPosts
     .filter((article) => {
@@ -93,8 +90,7 @@ export default async function BlogPostPage({
         return false;
       }
 
-      const hasSameCategory =
-        article.category?.id === post.category?.id;
+      const hasSameCategory = article.category?.id === post.category?.id;
 
       const hasSharedTag = article.tags.some((tag) =>
         currentTagIds.has(tag.id),
@@ -109,8 +105,7 @@ export default async function BlogPostPage({
    *
    * We use createdAt as a safe fallback.
    */
-  const displayedDate =
-    post.publishedAt ?? post.createdAt;
+  const displayedDate = post.publishedAt ?? post.createdAt;
 
   /**
    * The article is stored as one Markdown string.
@@ -120,14 +115,6 @@ export default async function BlogPostPage({
    *
    * Later, we will install a proper Markdown renderer.
    */
-  const contentBlocks = post.content
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter(
-      (block) =>
-        block.length > 0 &&
-        !block.startsWith("# "),
-    );
 
   return (
     <main className="min-h-screen bg-[#020704] px-6 py-20 text-[#d9ffe3]">
@@ -148,10 +135,7 @@ export default async function BlogPostPage({
             {post.category?.name ?? "Uncategorized"}
           </span>
 
-          <span
-            aria-hidden="true"
-            className="text-[#426c4e]"
-          >
+          <span aria-hidden="true" className="text-[#426c4e]">
             /
           </span>
 
@@ -162,16 +146,11 @@ export default async function BlogPostPage({
             {formatPublishedDate(displayedDate)}
           </time>
 
-          <span
-            aria-hidden="true"
-            className="text-[#426c4e]"
-          >
+          <span aria-hidden="true" className="text-[#426c4e]">
             /
           </span>
 
-          <span className="text-[#7ba487]">
-            {post.readingTime} MIN READ
-          </span>
+          <span className="text-[#7ba487]">{post.readingTime} MIN READ</span>
         </div>
 
         <h1 className="text-4xl font-bold leading-tight md:text-6xl">
@@ -194,16 +173,7 @@ export default async function BlogPostPage({
         </div>
 
         <section className="mt-12 border-t border-[rgba(56,255,122,0.2)] pt-10">
-          <div className="space-y-6">
-            {contentBlocks.map((block, index) => (
-              <p
-                key={`${post.id}-${index}`}
-                className="text-base leading-8 text-[#b5d8be] md:text-lg"
-              >
-                {block.replace(/^#{2,6}\s+/, "")}
-              </p>
-            ))}
-          </div>
+          <MarkdownContent content={post.content} />
         </section>
 
         <ShareButtons title={post.title} />
@@ -222,10 +192,7 @@ export default async function BlogPostPage({
 
             <div className="mt-8 grid gap-6 md:grid-cols-2">
               {relatedPosts.map((relatedPost) => (
-                <PostCard
-                  key={relatedPost.id}
-                  post={relatedPost}
-                />
+                <PostCard key={relatedPost.id} post={relatedPost} />
               ))}
             </div>
           </section>
