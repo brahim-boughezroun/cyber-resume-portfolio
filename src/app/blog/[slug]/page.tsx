@@ -1,25 +1,34 @@
-import { blogPosts } from "@/data/blog";
+import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+
 import { AuthorCard } from "@/components/blog/author-card";
 import { PostCard } from "@/components/blog/post-card";
 import { ShareButtons } from "@/components/blog/share-buttons";
-import type { Metadata } from "next";
-import Link from "next/link";
+
+import {
+  getPublishedPostBySlug,
+  getPublishedPosts,
+} from "../../../../database/repositories/post.repository";
+
+export const dynamic = "force-dynamic";
+
 type BlogPostPageProps = {
   params: Promise<{
     slug: string;
   }>;
 };
+
+/**
+ * Generate the browser title and description
+ * for each article dynamically.
+ */
 export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  const post = blogPosts.find(
-    (article) =>
-      article.slug === slug &&
-      article.status === "published",
-  );
+  const post = await getPublishedPostBySlug(slug);
 
   if (!post) {
     return {
@@ -32,35 +41,94 @@ export async function generateMetadata({
     description: post.excerpt,
   };
 }
-export default async function BlogPostPage({ params }: BlogPostPageProps) {
+
+export default async function BlogPostPage({
+  params,
+}: BlogPostPageProps) {
   const { slug } = await params;
 
-  // find() searches the array and returns the first matching article.
-  const post = blogPosts.find((article) => article.slug === slug);
+  /**
+   * Find the article using the slug from the URL.
+   *
+   * Example URL:
+   * /blog/building-rihla-ai
+   *
+   * slug:
+   * building-rihla-ai
+   */
+  const post = await getPublishedPostBySlug(slug);
 
-  // Stop rendering when no article matches the URL.
-  if (!post || post.status !== "published") {
+  /**
+   * Display the Next.js 404 page when:
+   *
+   * - The article does not exist.
+   * - The article is a draft.
+   * - The article is archived.
+   * - Its publication date is in the future.
+   */
+  if (!post) {
     notFound();
   }
-  const relatedPosts = blogPosts
+
+  /**
+   * Load published articles so we can calculate
+   * related posts.
+   */
+  const publishedPosts = await getPublishedPosts();
+
+  /**
+   * A Set stores unique tag IDs.
+   *
+   * It lets us quickly check whether another
+   * article shares a tag with the current article.
+   */
+  const currentTagIds = new Set(
+    post.tags.map((tag) => tag.id),
+  );
+
+  const relatedPosts = publishedPosts
     .filter((article) => {
-      // Do not recommend the article currently being read.
+      // Do not recommend the current article.
       if (article.id === post.id) {
         return false;
       }
 
-      // Draft articles must never appear publicly.
-      if (article.status !== "published") {
-        return false;
-      }
+      const hasSameCategory =
+        article.category?.id === post.category?.id;
 
-      const hasSameCategory = article.category === post.category;
-
-      const hasSharedTag = article.tags.some((tag) => post.tags.includes(tag));
+      const hasSharedTag = article.tags.some((tag) =>
+        currentTagIds.has(tag.id),
+      );
 
       return hasSameCategory || hasSharedTag;
     })
     .slice(0, 2);
+
+  /**
+   * A published post should normally have publishedAt.
+   *
+   * We use createdAt as a safe fallback.
+   */
+  const displayedDate =
+    post.publishedAt ?? post.createdAt;
+
+  /**
+   * The article is stored as one Markdown string.
+   *
+   * For now, we split it into text blocks using
+   * empty lines.
+   *
+   * Later, we will install a proper Markdown renderer.
+   */
+  const contentBlocks = post.content
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(
+      (block) =>
+        block.length > 0 &&
+        !block.startsWith("# "),
+    );
+
   return (
     <main className="min-h-screen bg-[#020704] px-6 py-20 text-[#d9ffe3]">
       <div className="mx-auto max-w-4xl">
@@ -70,24 +138,40 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         >
           ← BACK TO ALL ARTICLES
         </Link>
-        <p className="text-xs font-bold tracking-[0.25em] pb-4 text-[#38ff7a]">
-          ARTICLE://DYNAMIC_ROUTE
+
+        <p className="pb-4 text-xs font-bold tracking-[0.25em] text-[#38ff7a]">
+          ARTICLE://{post.id}
         </p>
+
         <div className="mb-6 flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.14em]">
-          <span className="text-[#38ff7a]">{post.category}</span>
+          <span className="text-[#38ff7a]">
+            {post.category?.name ?? "Uncategorized"}
+          </span>
 
-          <span aria-hidden="true" className="text-[#426c4e]">
+          <span
+            aria-hidden="true"
+            className="text-[#426c4e]"
+          >
             /
           </span>
 
-          <time dateTime={post.publishedAt} className="text-[#7ba487]">
-            {formatPublishedDate(post.publishedAt)}
+          <time
+            dateTime={displayedDate.toISOString()}
+            className="text-[#7ba487]"
+          >
+            {formatPublishedDate(displayedDate)}
           </time>
-          <span aria-hidden="true" className="text-[#426c4e]">
+
+          <span
+            aria-hidden="true"
+            className="text-[#426c4e]"
+          >
             /
           </span>
 
-          <span className="text-[#7ba487]">{post.readingTime} MIN READ</span>
+          <span className="text-[#7ba487]">
+            {post.readingTime} MIN READ
+          </span>
         </div>
 
         <h1 className="text-4xl font-bold leading-tight md:text-6xl">
@@ -97,31 +181,35 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <p className="mt-6 max-w-3xl text-lg leading-8 text-[#7ba487]">
           {post.excerpt}
         </p>
+
         <div className="mt-8 flex flex-wrap gap-2">
           {post.tags.map((tag) => (
             <span
-              key={tag}
+              key={tag.id}
               className="border border-[rgba(56,255,122,0.2)] bg-[rgba(56,255,122,0.05)] px-3 py-1.5 text-xs font-bold text-[#82b991]"
             >
-              #{tag.toLowerCase().replaceAll(" ", "-")}
+              #{tag.slug}
             </span>
           ))}
         </div>
+
         <section className="mt-12 border-t border-[rgba(56,255,122,0.2)] pt-10">
           <div className="space-y-6">
-            {post.content.map((paragraph, index) => (
+            {contentBlocks.map((block, index) => (
               <p
-                key={index}
+                key={`${post.id}-${index}`}
                 className="text-base leading-8 text-[#b5d8be] md:text-lg"
               >
-                {paragraph}
+                {block.replace(/^#{2,6}\s+/, "")}
               </p>
             ))}
           </div>
         </section>
+
         <ShareButtons title={post.title} />
 
         <AuthorCard />
+
         {relatedPosts.length > 0 && (
           <section className="mt-16 border-t border-[rgba(56,255,122,0.2)] pt-10">
             <p className="text-xs font-bold tracking-[0.25em] text-[#38ff7a]">
@@ -134,7 +222,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
             <div className="mt-8 grid gap-6 md:grid-cols-2">
               {relatedPosts.map((relatedPost) => (
-                <PostCard key={relatedPost.id} post={relatedPost} />
+                <PostCard
+                  key={relatedPost.id}
+                  post={relatedPost}
+                />
               ))}
             </div>
           </section>
@@ -143,10 +234,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     </main>
   );
 }
-function formatPublishedDate(date: string) {
+
+function formatPublishedDate(date: Date) {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "2-digit",
     year: "numeric",
-  }).format(new Date(`${date}T00:00:00`));
+  }).format(date);
 }

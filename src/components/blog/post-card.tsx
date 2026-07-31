@@ -6,7 +6,7 @@ import Link from "next/link";
 
 // Import the BlogPost type so the component knows
 // what kind of article data it should receive.
-import type { BlogPost } from "@/types/blog";
+import type { PostSummary } from "@/types/post";
 
 // Props are values passed from a parent component
 // into a child component.
@@ -14,7 +14,7 @@ import type { BlogPost } from "@/types/blog";
 // This component expects one prop named "post".
 // That prop must follow the BlogPost type.
 type PostCardProps = {
-  post: BlogPost;
+  post: PostSummary;
 };
 
 // This helper function converts a machine-friendly date
@@ -25,18 +25,14 @@ type PostCardProps = {
 //
 // Output:
 // "Jul 17, 2026"
-function formatPublishedDate(date: string) {
-  // Intl.DateTimeFormat is built into JavaScript.
-  // It formats dates based on a language and formatting options.
+function formatPublishedDate(date: Date) {
   const formatter = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "2-digit",
     year: "numeric",
   });
 
-  // We add T00:00:00 so JavaScript interprets the value
-  // as a complete date and time.
-  return formatter.format(new Date(`${date}T00:00:00`));
+  return formatter.format(date);
 }
 
 // This is a reusable React component.
@@ -54,6 +50,7 @@ function formatPublishedDate(date: string) {
 //   const post = props.post;
 // }
 export function PostCard({ post }: PostCardProps) {
+  const displayedDate = post.publishedAt ?? post.createdAt;
   return (
     // <article> is a semantic HTML element.
     // It tells browsers and search engines that this block
@@ -81,7 +78,9 @@ export function PostCard({ post }: PostCardProps) {
       <div className="flex flex-1 flex-col p-6">
         {/* Article metadata: category and date */}
         <div className="mb-5 flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-[0.14em]">
-          <span className="text-[#38ff7a]">{post.category}</span>
+          <span className="text-[#38ff7a]">
+            {post.category?.name ?? "Uncategorized"}
+          </span>
 
           {/* aria-hidden removes decorative content from screen readers. */}
           <span aria-hidden="true" className="text-[#426c4e]">
@@ -90,12 +89,10 @@ export function PostCard({ post }: PostCardProps) {
 
           {/* <time> is a semantic element representing a date. */}
           <time
-            // dateTime contains the machine-readable date.
-            dateTime={post.publishedAt}
+            dateTime={displayedDate.toISOString()}
             className="text-[#7ba487]"
           >
-            {/* The visitor sees the formatted version. */}
-            {formatPublishedDate(post.publishedAt)}
+            {formatPublishedDate(displayedDate)}
           </time>
         </div>
 
@@ -138,20 +135,10 @@ export function PostCard({ post }: PostCardProps) {
           */}
           {post.tags.map((tag) => (
             <span
-              // React uses key to identify each generated element.
-              //
-              // Keys help React update lists efficiently.
-              key={tag}
+              key={tag.id}
               className="border border-[rgba(56,255,122,0.15)] bg-[rgba(56,255,122,0.04)] px-2.5 py-1 text-[10px] font-bold tracking-[0.08em] text-[#82b991]"
             >
-              {/*
-                toLowerCase() converts text to lowercase.
-
-                replaceAll(" ", "-") changes spaces into hyphens.
-
-                "Open Source" becomes "#open-source".
-              */}
-              #{tag.toLowerCase().replaceAll(" ", "-")}
+              #{tag.slug}
             </span>
           ))}
         </div>

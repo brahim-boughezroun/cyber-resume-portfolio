@@ -1,12 +1,23 @@
 import { database } from "../../src/database/client";
 import { calculateReadingTime } from "../../src/lib/reading-time";
+
 import type {
   PostCategory,
+  PostDetails,
   PostStatus,
   PostSummary,
   PostTag,
 } from "../../src/types/post";
 
+/**
+ * This type represents one row returned by PostgreSQL.
+ *
+ * PostgreSQL uses snake_case:
+ * cover_image_url
+ *
+ * Our TypeScript application uses camelCase:
+ * coverImageUrl
+ */
 type PostSummaryRow = {
   id: string;
   title: string;
@@ -30,11 +41,21 @@ type PostSummaryRow = {
   tags: PostTag[];
 };
 
+/**
+ * Convert a PostgreSQL row into the PostSummary format
+ * used by the application.
+ */
 function mapPostSummaryRow(
   row: PostSummaryRow,
 ): PostSummary {
   let category: PostCategory | null = null;
 
+  /**
+   * A post may not have a category.
+   *
+   * We only create the category object when all required
+   * category values exist.
+   */
   if (
     row.category_id &&
     row.category_name &&
@@ -66,10 +87,35 @@ function mapPostSummaryRow(
 
     category,
     tags: row.tags,
+
+    /**
+     * Reading time is calculated from the article content.
+     */
     readingTime: calculateReadingTime(row.content),
   };
 }
 
+/**
+ * Convert a PostgreSQL row into a complete article.
+ *
+ * PostDetails contains everything from PostSummary,
+ * plus the full article content.
+ */
+function mapPostDetailsRow(
+  row: PostSummaryRow,
+): PostDetails {
+  return {
+    ...mapPostSummaryRow(row),
+    content: row.content,
+  };
+}
+
+/**
+ * Return all published articles.
+ *
+ * Used by:
+ * /blog
+ */
 export async function getPublishedPosts(): Promise<
   PostSummary[]
 > {
@@ -145,4 +191,106 @@ export async function getPublishedPosts(): Promise<
   );
 
   return result.rows.map(mapPostSummaryRow);
+}
+
+/**
+ * Return one published article using its URL slug.
+ *
+ * Example:
+ *
+ * getPublishedPostBySlug("building-rihla-ai")
+ *
+ * Used by:
+ * /blog/[slug]
+ */
+export async function getPublishedPostBySlug(
+  slug: string,
+): Promise<PostDetails | null> {
+  /**
+   * Normalize the slug before sending it to PostgreSQL.
+   *
+   * "  Building-Rihla-AI  "
+   *
+   * becomes:
+   *
+   * "building-rihla-ai"
+   */
+  const normalizedSlug = slug
+    .trim()
+    .toLowerCase();
+
+  const result = await database.query<PostSummaryRow>(
+    `
+      SELECT
+        p.id::text AS id,
+        p.title,
+        p.slug,
+        p.excerpt,
+        p.content,
+        p.cover_image_url,
+        p.status,
+        p.featured,
+        p.published_at,
+        p.created_at,
+        p.updated_at,
+
+        u.id::text AS author_id,
+        u.name AS author_name,
+
+        c.id::text AS category_id,
+        c.name AS category_name,
+        c.slug AS category_slug,
+
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', t.id::text,
+              'name', t.name,
+              'slug', t.slug
+            )
+          ) FILTER (
+            WHERE t.id IS NOT NULL
+          ),
+          '[]'::json
+        ) AS tags
+
+      FROM posts p
+
+      INNER JOIN users u
+        ON u.id = p.author_id
+
+      LEFT JOIN categories c
+        ON c.id = p.category_id
+
+      LEFT JOIN post_tags pt
+        ON pt.post_id = p.id
+
+      LEFT JOIN tags t
+        ON t.id = pt.tag_id
+
+      WHERE p.slug = $1
+        AND p.status = 'PUBLISHED'
+        AND (
+          p.published_at IS NULL
+          OR p.published_at <= CURRENT_TIMESTAMP
+        )
+
+      GROUP BY
+        p.id,
+        u.id,
+        u.name,
+        c.id,
+        c.name,
+        c.slug
+
+      LIMIT 1
+    `,
+    [normalizedSlug],
+  );
+
+  const post = result.rows[0];
+
+  return post
+    ? mapPostDetailsRow(post)
+    : null;
 }
