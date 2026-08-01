@@ -294,3 +294,84 @@ export async function getPublishedPostBySlug(
     ? mapPostDetailsRow(post)
     : null;
 }
+/**
+ * Return every blog post for the admin dashboard.
+ *
+ * Unlike getPublishedPosts(), this query does not hide:
+ *
+ * - Draft posts
+ * - Scheduled posts
+ * - Archived posts
+ * - Published posts with a future publication date
+ *
+ * Used by:
+ * /admin/posts
+ */
+export async function getAdminPosts(): Promise<
+  PostSummary[]
+> {
+  const result = await database.query<PostSummaryRow>(
+    `
+      SELECT
+        p.id::text AS id,
+        p.title,
+        p.slug,
+        p.excerpt,
+        p.content,
+        p.cover_image_url,
+        p.status,
+        p.featured,
+        p.published_at,
+        p.created_at,
+        p.updated_at,
+
+        u.id::text AS author_id,
+        u.name AS author_name,
+
+        c.id::text AS category_id,
+        c.name AS category_name,
+        c.slug AS category_slug,
+
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', t.id::text,
+              'name', t.name,
+              'slug', t.slug
+            )
+          ) FILTER (
+            WHERE t.id IS NOT NULL
+          ),
+          '[]'::json
+        ) AS tags
+
+      FROM posts p
+
+      INNER JOIN users u
+        ON u.id = p.author_id
+
+      LEFT JOIN categories c
+        ON c.id = p.category_id
+
+      LEFT JOIN post_tags pt
+        ON pt.post_id = p.id
+
+      LEFT JOIN tags t
+        ON t.id = pt.tag_id
+
+      GROUP BY
+        p.id,
+        u.id,
+        u.name,
+        c.id,
+        c.name,
+        c.slug
+
+      ORDER BY
+        p.updated_at DESC,
+        p.created_at DESC
+    `,
+  );
+
+  return result.rows.map(mapPostSummaryRow);
+}
