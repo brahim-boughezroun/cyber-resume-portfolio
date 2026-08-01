@@ -1,9 +1,13 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
+
 import {
+  BookOpen,
   ExternalLink,
+  FilePlus2,
   FileText,
-  Folder,
+  FolderTree,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -20,31 +24,46 @@ type AdminSidebarProps = {
   logoutAction: () => Promise<void>;
 };
 
-const navigation = [
+type NavigationItem = {
+  name: string;
+  href?: string;
+  icon: LucideIcon;
+  disabled?: boolean;
+};
+
+const workspaceNavigation: NavigationItem[] = [
   {
-    name: "Overview",
+    name: "Dashboard",
     href: "/admin",
     icon: LayoutDashboard,
   },
   {
-    name: "Posts",
+    name: "Articles",
     href: "/admin/posts",
     icon: FileText,
   },
 ];
 
-const upcomingNavigation = [
+const contentNavigation: NavigationItem[] = [
+  {
+    name: "New article",
+    icon: FilePlus2,
+    disabled: true,
+  },
   {
     name: "Categories",
-    icon: Folder,
+    icon: FolderTree,
+    disabled: true,
   },
   {
     name: "Tags",
     icon: Tags,
+    disabled: true,
   },
   {
     name: "Comments",
     icon: MessageSquare,
+    disabled: true,
   },
 ];
 
@@ -57,6 +76,17 @@ function getInitials(name: string): string {
     .join("");
 }
 
+function isNavigationActive(
+  pathname: string,
+  href: string,
+): boolean {
+  if (href === "/admin") {
+    return pathname === "/admin";
+  }
+
+  return pathname.startsWith(href);
+}
+
 export function AdminSidebar({
   userName,
   logoutAction,
@@ -66,28 +96,67 @@ export function AdminSidebar({
 
   const initials = getInitials(userName);
 
+  function renderNavigationItem(
+    item: NavigationItem,
+  ) {
+    const Icon = item.icon;
+
+    if (!item.href || item.disabled) {
+      return (
+        <div
+          key={item.name}
+          aria-disabled="true"
+          title={`${item.name} will be implemented later`}
+          className="flex cursor-not-allowed items-center gap-3 px-3 py-2 text-sm text-[#aaa9a4]"
+        >
+          <Icon className="h-[18px] w-[18px]" />
+
+          <span>{item.name}</span>
+        </div>
+      );
+    }
+
+    const active = isNavigationActive(
+      pathname,
+      item.href,
+    );
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={() => setIsOpen(false)}
+        className={[
+          "flex items-center gap-3 rounded-md px-3 py-2",
+          "text-sm font-medium transition-colors",
+          active
+            ? "bg-white text-[#1c1c1c] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+            : "text-[#666661] hover:bg-white/70 hover:text-[#1c1c1c]",
+        ].join(" ")}
+      >
+        <Icon className="h-[18px] w-[18px]" />
+
+        <span>{item.name}</span>
+      </Link>
+    );
+  }
+
   return (
     <>
-      {/* Mobile header */}
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
+      {/* Mobile navigation bar */}
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-[#e7e7e2] bg-[#fafaf8] px-4 lg:hidden">
         <Link
           href="/admin"
-          className="flex items-center gap-3"
           onClick={() => setIsOpen(false)}
+          className="flex items-center gap-2.5"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
-            B
-          </div>
+          <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#dcdcd6] bg-white text-[#0f766e]">
+            <BookOpen className="h-4 w-4" />
+          </span>
 
-          <div>
-            <p className="text-sm font-semibold text-slate-950">
-              Brahim CMS
-            </p>
-
-            <p className="text-xs text-slate-500">
-              Content management
-            </p>
-          </div>
+          <span className="text-sm font-semibold text-[#1c1c1c]">
+            Brahim Studio
+          </span>
         </Link>
 
         <button
@@ -95,50 +164,51 @@ export function AdminSidebar({
           aria-label="Open admin navigation"
           aria-expanded={isOpen}
           onClick={() => setIsOpen(true)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-[#deded8] bg-white text-[#5f5f5a] transition hover:bg-[#f2f2ef]"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-[18px] w-[18px]" />
         </button>
       </header>
 
-      {/* Mobile overlay */}
+      {/* Mobile backdrop */}
       {isOpen && (
         <button
           type="button"
           aria-label="Close admin navigation"
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[1px] lg:hidden"
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={[
-          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white transition-transform duration-200",
+          "fixed inset-y-0 left-0 z-50 flex w-[260px]",
+          "flex-col border-r border-[#e4e4df]",
+          "bg-[#f5f5f2] transition-transform duration-200",
           isOpen
             ? "translate-x-0"
             : "-translate-x-full",
           "lg:translate-x-0",
         ].join(" ")}
       >
-        {/* Sidebar header */}
-        <div className="flex h-20 items-center justify-between border-b border-slate-200 px-5">
+        {/* Workspace identity */}
+        <div className="flex h-16 items-center justify-between px-4">
           <Link
             href="/admin"
-            className="flex items-center gap-3"
             onClick={() => setIsOpen(false)}
+            className="flex min-w-0 items-center gap-2.5"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-sm font-bold text-white shadow-sm">
-              B
-            </div>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#d9d9d3] bg-white text-[#0f766e]">
+              <BookOpen className="h-4 w-4" />
+            </span>
 
-            <div>
-              <p className="font-semibold text-slate-950">
-                Brahim CMS
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-[#1c1c1c]">
+                Brahim Studio
               </p>
 
-              <p className="text-xs text-slate-500">
-                Blog administration
+              <p className="truncate text-[11px] text-[#8a8a85]">
+                Publishing workspace
               </p>
             </div>
           </Link>
@@ -147,116 +217,74 @@ export function AdminSidebar({
             type="button"
             aria-label="Close admin navigation"
             onClick={() => setIsOpen(false)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 lg:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-[#777772] hover:bg-white lg:hidden"
           >
-            <X className="h-5 w-5" />
+            <X className="h-[18px] w-[18px]" />
           </button>
         </div>
 
-        {/* Navigation */}
-        <div className="flex-1 overflow-y-auto px-4 py-6">
-          <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Workspace
-          </p>
-
-          <nav className="space-y-1">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-
-              const isActive =
-                item.href === "/admin"
-                  ? pathname === "/admin"
-                  : pathname.startsWith(item.href);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className={[
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition",
-                    isActive
-                      ? "bg-indigo-50 text-indigo-700"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
-                  ].join(" ")}
-                >
-                  <Icon className="h-5 w-5" />
-
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <p className="mb-3 mt-8 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Coming next
-          </p>
-
+        {/* Navigation groups */}
+        <div className="flex-1 overflow-y-auto px-3 pb-6 pt-2">
           <div className="space-y-1">
-            {upcomingNavigation.map((item) => {
-              const Icon = item.icon;
+            {workspaceNavigation.map(
+              renderNavigationItem,
+            )}
+          </div>
 
-              return (
-                <div
-                  key={item.name}
-                  aria-disabled="true"
-                  className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-400"
-                >
-                  <Icon className="h-5 w-5" />
+          <div className="mt-6">
+            <p className="mb-2 rounded-md bg-[#ecece8] px-3 py-1.5 text-[11px] font-medium text-[#8c8c86]">
+              Content
+            </p>
 
-                  <span className="flex-1">
-                    {item.name}
-                  </span>
+            <div className="space-y-1">
+              {contentNavigation.map(
+                renderNavigationItem,
+              )}
+            </div>
+          </div>
 
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                    Soon
-                  </span>
-                </div>
-              );
-            })}
+          <div className="mt-6">
+            <p className="mb-2 rounded-md bg-[#ecece8] px-3 py-1.5 text-[11px] font-medium text-[#8c8c86]">
+              Website
+            </p>
+
+            <Link
+              href="/blog"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[#666661] transition hover:bg-white/70 hover:text-[#1c1c1c]"
+            >
+              <ExternalLink className="h-[18px] w-[18px]" />
+
+              <span>View public blog</span>
+            </Link>
           </div>
         </div>
 
-        {/* Sidebar footer */}
-        <div className="border-t border-slate-200 p-4">
-          <Link
-            href="/blog"
-            onClick={() => setIsOpen(false)}
-            className="mb-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
-          >
-            <ExternalLink className="h-5 w-5" />
-
-            <span>View public blog</span>
-          </Link>
-
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
-                {initials || "AD"}
-              </div>
-
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">
-                  {userName}
-                </p>
-
-                <p className="text-xs text-slate-500">
-                  Administrator
-                </p>
-              </div>
+        {/* User account */}
+        <div className="border-t border-[#e0e0da] p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dceeea] text-xs font-semibold text-[#0f665f]">
+              {initials || "AD"}
             </div>
 
-            <form
-              action={logoutAction}
-              className="mt-3"
-            >
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-[#222220]">
+                {userName}
+              </p>
+
+              <p className="text-[11px] text-[#8b8b86]">
+                Administrator
+              </p>
+            </div>
+
+            <form action={logoutAction}>
               <button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                title="Sign out"
+                aria-label="Sign out"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-[#777772] transition hover:bg-white hover:text-red-600"
               >
-                <LogOut className="h-4 w-4" />
-
-                Sign out
+                <LogOut className="h-[17px] w-[17px]" />
               </button>
             </form>
           </div>
