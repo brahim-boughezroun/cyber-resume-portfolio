@@ -181,7 +181,8 @@ button {
   background: rgba(1, 13, 6, 0.72);
 }
 
-.hud-nav button {
+.hud-nav button,
+.hud-nav a {
   position: relative;
   min-width: 58px;
   padding: 12px 10px;
@@ -193,12 +194,15 @@ button {
   font-weight: 800;
   letter-spacing: 0.13em;
   cursor: pointer;
+  text-decoration: none;
+  text-align: center;
   transition: 180ms ease;
 }
 
-.hud-nav button:last-child { border-right: 0; }
+.hud-nav > :last-child { border-right: 0; }
 .hud-nav button:hover,
-.hud-nav button.active {
+.hud-nav button.active,
+.hud-nav a:hover {
   color: var(--green-soft);
   text-shadow: 0 0 14px var(--green);
   background: rgba(56, 255, 122, 0.08);
@@ -1815,4 +1819,23 @@ button:focus-visible {
 }
 .zone-marker {
   display: none !important;
+}
+
+.hud-blog-link {
+  min-width: 68px;
+  padding: 12px 10px;
+  border-left: 1px solid rgba(56, 255, 122, 0.12);
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-decoration: none;
+  text-align: center;
+  transition: 180ms ease;
+}
+
+.hud-blog-link:hover {
+  color: var(--green-soft);
+  background: rgba(56, 255, 122, 0.08);
+  text-shadow: 0 0 14px var(--green);
 }

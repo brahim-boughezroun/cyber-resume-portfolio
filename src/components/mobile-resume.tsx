@@ -1,4 +1,5 @@
 import { portfolio } from "@/data/portfolio";
+import Link from "next/link";
 
 const mobileZones = [
   { href: "#mobile-about", label: "ABOUT" },
@@ -28,6 +29,7 @@ export function MobileResume() {
 
       <nav className="mobile-nav" aria-label="Mobile resume sections">
         {mobileZones.map((zone) => <a href={zone.href} key={zone.href}>{zone.label}</a>)}
+      <Link href="/blog">BLOG</Link>
       </nav>
 
       <MobileSection id="mobile-about" title="ABOUT" command="cat about.txt">

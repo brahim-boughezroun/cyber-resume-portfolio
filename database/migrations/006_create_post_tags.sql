@@ -1,0 +1,18 @@
+BEGIN;
+
+CREATE TABLE post_tags (
+  post_id BIGINT NOT NULL
+    REFERENCES posts(id)
+    ON DELETE CASCADE,
+
+  tag_id BIGINT NOT NULL
+    REFERENCES tags(id)
+    ON DELETE CASCADE,
+
+  created_at TIMESTAMPTZ NOT NULL
+    DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (post_id, tag_id)
+);
+
+COMMIT;
