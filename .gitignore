@@ -9,3 +9,10 @@ yarn-error.log*
 pnpm-debug.log*
 .DS_Store
 .env.local
+
+
+# Graphify generated output
+graphify-out/
+
+# TypeScript generated cache
+*.tsbuildinfo
